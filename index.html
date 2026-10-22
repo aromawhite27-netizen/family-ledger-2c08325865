@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>礼金查询</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; color: #292720; background: #f5f3ed; font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; font-size: 18px; line-height: 1.6; }
+    .page { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; }
+    h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.3; }
+    .intro { margin: 0 0 24px; color: #5d594e; }
+    .search-area { margin: 0 0 24px; }
+    .search-label { display: block; margin-bottom: 8px; font-size: 22px; font-weight: bold; }
+    .search-input { display: block; width: 100%; min-height: 64px; padding: 12px 14px; border: 2px solid #625d51; border-radius: 6px; color: #292720; background: #fffefa; font: inherit; font-size: 24px; line-height: 1.4; -webkit-appearance: none; }
+    .search-input::placeholder { color: #6b665c; opacity: 1; }
+    .search-help { margin: 8px 0 12px; color: #5d594e; }
+    .actions { display: -webkit-flex; display: flex; }
+    button { min-height: 60px; padding: 12px 16px; border: 2px solid #8b3028; border-radius: 6px; color: #fff; background: #8b3028; font: inherit; font-size: 22px; font-weight: bold; line-height: 1.4; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
+    #search-button { -webkit-flex: 2; flex: 2; min-width: 0; }
+    #clear-button { -webkit-flex: 1; flex: 1; min-width: 0; margin-left: 12px; color: #67231d; background: #fffefa; }
+    #clear-button:active { background: #eee8df; }
+    button:active { background: #69231d; border-color: #69231d; }
+    button:focus, input:focus { outline: 3px solid #292720; outline-offset: 3px; }
+    .results-heading { margin: 0 0 12px; font-size: 22px; }
+    .totals { margin: 0 0 24px; padding: 16px 0; border-top: 1px solid #ccc7ba; border-bottom: 1px solid #ccc7ba; color: #5d594e; }
+    .totals p { margin: 0; }
+    .totals strong { color: #292720; font-size: 24px; overflow-wrap: break-word; word-break: break-all; }
+    .ledger { width: 100%; table-layout: fixed; border-collapse: collapse; background: #fffefa; }
+    .ledger th:first-child { width: 56%; }
+    .ledger th, .ledger td { padding: 18px 16px; border-bottom: 1px solid #ddd9ce; text-align: left; vertical-align: middle; }
+    .ledger td { overflow-wrap: break-word; word-wrap: break-word; word-break: break-all; }
+    .ledger th { color: #5d594e; font-size: 18px; font-weight: normal; background: #eeebe2; }
+    .ledger .amount-column { text-align: right; }
+    .record-name { font-size: 24px; font-weight: bold; }
+    .duplicate-label { display: block; margin-top: 4px; color: #5d594e; font-size: 18px; }
+    .record-amount { display: block; text-align: right; font-size: 24px; font-weight: bold; font-variant-numeric: tabular-nums; }
+    .empty-title { display: block; font-size: 22px; margin-bottom: 8px; }
+    .empty-help { color: #5d594e; }
+    @media (max-width: 359px) {
+      .page { padding-right: 12px; padding-left: 12px; }
+      .ledger th, .ledger td { padding-right: 12px; padding-left: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>礼金查询</h1>
+      <p class="intro">查姓名，看礼金。每一笔都单独保留。</p>
+    </header>
+    <form id="search-form" class="search-area" role="search" autocomplete="off">
+      <label for="search-input" class="search-label">输入姓名</label>
+      <input id="search-input" class="search-input" type="text" placeholder="请输入姓名" aria-describedby="search-help" aria-controls="results" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <p id="search-help" class="search-help">可输完整姓名，也可只输其中一个字。</p>
+      <div class="actions"><button id="search-button" type="submit">搜索姓名</button><button id="clear-button" type="button">清空</button></div>
+    </form>
+    <section class="totals" aria-label="全部礼金合计">
+      <p>总笔数 <strong id="total-count">0</strong> 笔</p>
+      <p>总金额 <strong id="total-amount">0</strong> 元</p>
+    </section>
+    <h2 id="results-count" class="results-heading" aria-live="polite" aria-atomic="true"></h2>
+    <table class="ledger" aria-label="礼金记录">
+      <thead><tr><th scope="col">姓名</th><th scope="col" class="amount-column">金额（元）</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table>
+  </main>
+  <script id="records-data" type="application/json">[{"id":1,"name":"金致慧","amount":200},{"id":2,"name":"王景翠","amount":200},{"id":3,"name":"张功源","amount":200},{"id":4,"name":"余佐权","amount":200},{"id":5,"name":"王同州","amount":300},{"id":6,"name":"黄后琼","amount":200},{"id":7,"name":"左茂平","amount":200},{"id":8,"name":"王维国","amount":200},{"id":9,"name":"杨年介","amount":300},{"id":10,"name":"李世学","amount":200},{"id":11,"name":"冯亮","amount":200},{"id":12,"name":"秦光美","amount":200},{"id":13,"name":"朱宏超","amount":200},{"id":14,"name":"刘普安","amount":200},{"id":15,"name":"王辉","amount":500},{"id":16,"name":"向太艳","amount":200},{"id":17,"name":"赵乃庭","amount":200},{"id":18,"name":"余佐成","amount":500},{"id":19,"name":"余佐雄","amount":200},{"id":20,"name":"夏绍杰","amount":500},{"id":21,"name":"黄雪松","amount":1000},{"id":22,"name":"曾召平","amount":2000},{"id":23,"name":"陈千尧","amount":500},{"id":24,"name":"肖霞","amount":200},{"id":25,"name":"何奕双","amount":300},{"id":26,"name":"姜玉萍","amount":300},{"id":27,"name":"姜化菊","amount":300},{"id":28,"name":"香香","amount":300},{"id":29,"name":"王顺银","amount":200},{"id":30,"name":"龚  银","amount":200},{"id":31,"name":"徐昌政","amount":500},{"id":32,"name":"游泽宝","amount":300},{"id":33,"name":"徐玲","amount":500},{"id":34,"name":"刘斌","amount":200},{"id":35,"name":"崔显平","amount":200},{"id":36,"name":"舒艳丽","amount":400},{"id":37,"name":"舒庆国","amount":200},{"id":38,"name":"李永春","amount":300},{"id":39,"name":"袁典兰","amount":200},{"id":40,"name":"张功德","amount":200},{"id":41,"name":"王伟","amount":200},{"id":42,"name":"李赐富","amount":300},{"id":43,"name":"杨启和","amount":300},{"id":44,"name":"宋从悦","amount":300},{"id":45,"name":"杨简义","amount":500},{"id":46,"name":"谭祖凤","amount":300},{"id":47,"name":"吕光明","amount":500},{"id":48,"name":"谭远龙","amount":300},{"id":49,"name":"杨娇","amount":500},{"id":50,"name":"杨春花","amount":500},{"id":51,"name":"何显国","amount":500},{"id":52,"name":"胡代芝","amount":200},{"id":53,"name":"龙兵","amount":200},{"id":54,"name":"刘菊芸","amount":500},{"id":55,"name":"陶世凤","amount":500},{"id":56,"name":"李昌权","amount":200},{"id":57,"name":"骆先君","amount":300},{"id":58,"name":"骆先柱","amount":300},{"id":59,"name":"张旭晖","amount":200},{"id":60,"name":"万正兵","amount":200},{"id":61,"name":"方运福","amount":200},{"id":62,"name":"余佐英","amount":300},{"id":63,"name":"杨先红","amount":500},{"id":64,"name":"魏明权","amount":200},{"id":65,"name":"王云祥","amount":200},{"id":66,"name":"左词西","amount":200},{"id":67,"name":"郑州红","amount":200},{"id":68,"name":"沈爱华","amount":300},{"id":69,"name":"熊昌虎","amount":500},{"id":70,"name":"何其文","amount":200},{"id":71,"name":"胡存典","amount":200},{"id":72,"name":"宋小平","amount":200},{"id":73,"name":"明道学","amount":200},{"id":74,"name":"候明宇","amount":200},{"id":75,"name":"姚万顺","amount":500},{"id":76,"name":"刘宗菊","amount":200},{"id":77,"name":"代吉善","amount":200},{"id":78,"name":"代吉胜","amount":200},{"id":79,"name":"龙世高","amount":1000},{"id":80,"name":"游兰庆","amount":500},{"id":81,"name":"余佐平","amount":200},{"id":82,"name":"余佐春","amount":200},{"id":83,"name":"余佐林","amount":200},{"id":84,"name":"游兴堂","amount":300},{"id":85,"name":"刘天权","amount":300},{"id":86,"name":"王荣","amount":300},{"id":87,"name":"余西文","amount":200},{"id":88,"name":"宋胜阶","amount":200},{"id":89,"name":"谭成受","amount":300},{"id":90,"name":"张祥凤","amount":500},{"id":91,"name":"李垂章","amount":200},{"id":92,"name":"焦良平","amount":200},{"id":93,"name":"杨光祥","amount":200},{"id":94,"name":"薛明开","amount":200},{"id":95,"name":"邱隆重","amount":200},{"id":96,"name":"荣先国","amount":200},{"id":97,"name":"张少柏","amount":200},{"id":98,"name":"徐刚","amount":200},{"id":99,"name":"樊贵林","amount":200},{"id":100,"name":"李华平","amount":200},{"id":101,"name":"金蜜","amount":200},{"id":102,"name":"谭文武","amount":300},{"id":103,"name":"向文楚","amount":400},{"id":104,"name":"刘兰英","amount":200},{"id":105,"name":"刘美全","amount":300},{"id":106,"name":"余云庭","amount":300},{"id":107,"name":"余云章","amount":200},{"id":108,"name":"丁习凤","amount":200},{"id":109,"name":"候著魁","amount":200},{"id":110,"name":"陈步友","amount":300},{"id":111,"name":"张绍成","amount":300},{"id":112,"name":"乔兴月","amount":300},{"id":113,"name":"邱文昌","amount":200},{"id":114,"name":"潘德平","amount":300},{"id":115,"name":"金文平","amount":200},{"id":116,"name":"王宗华","amount":200},{"id":117,"name":"樊家志","amount":200},{"id":118,"name":"樊小红","amount":200},{"id":119,"name":"欧泽林","amount":200},{"id":120,"name":"王其元","amount":300},{"id":121,"name":"王其轩","amount":300},{"id":122,"name":"李淼","amount":500},{"id":123,"name":"袁超荣","amount":1000},{"id":124,"name":"袁祝青","amount":300},{"id":125,"name":"袁宗书","amount":300},{"id":126,"name":"袁超键","amount":300},{"id":127,"name":"余佐文","amount":500},{"id":128,"name":"杨华","amount":500},{"id":129,"name":"刘光玉","amount":200},{"id":130,"name":"何发召","amount":200},{"id":131,"name":"龙世忠","amount":500},{"id":132,"name":"夏万芳","amount":5000},{"id":133,"name":"饶友山","amount":500},{"id":134,"name":"刘衍堂","amount":200},{"id":135,"name":"魏耀成","amount":300},{"id":136,"name":"姜维","amount":300},{"id":137,"name":"梁祖明","amount":300},{"id":138,"name":"谭君吾","amount":200},{"id":139,"name":"夏代松","amount":200},{"id":140,"name":"胡正喜","amount":200},{"id":141,"name":"李祥华","amount":200},{"id":142,"name":"刘迪青","amount":200},{"id":143,"name":"张绍成","amount":200},{"id":144,"name":"王其军","amount":200},{"id":145,"name":"魏明全","amount":300},{"id":146,"name":"王子林","amount":200},{"id":147,"name":"魏登耀","amount":300},{"id":148,"name":"刘天才","amount":200},{"id":149,"name":"王宗佳","amount":300},{"id":150,"name":"袁超木","amount":300},{"id":151,"name":"叶经国","amount":300},{"id":152,"name":"斯尚旭","amount":300},{"id":153,"name":"斯尚浩","amount":300},{"id":154,"name":"王其林","amount":200},{"id":155,"name":"宋发林","amount":200},{"id":156,"name":"向永辉","amount":200},{"id":157,"name":"李际勇","amount":300},{"id":158,"name":"宋发权","amount":200},{"id":159,"name":"万舜","amount":300},{"id":160,"name":"谭传宝","amount":200},{"id":161,"name":"谭后成","amount":200},{"id":162,"name":"谭后平","amount":200},{"id":163,"name":"谭发银","amount":200},{"id":164,"name":"余茂林","amount":200},{"id":165,"name":"夏万华","amount":300},{"id":166,"name":"吕世琼","amount":300},{"id":167,"name":"吕世银","amount":500},{"id":168,"name":"夏代东","amount":500},{"id":169,"name":"吴成双","amount":200},{"id":170,"name":"万正祥","amount":200},{"id":171,"name":"柳锦全","amount":200},{"id":172,"name":"章友平","amount":200},{"id":173,"name":"黄前新","amount":500},{"id":174,"name":"葛双健","amount":300},{"id":175,"name":"葛师太","amount":200},{"id":176,"name":"葛同弟","amount":200},{"id":177,"name":"袁艳梅","amount":200},{"id":178,"name":"张才国","amount":300},{"id":179,"name":"何光斌","amount":200},{"id":180,"name":"易定远","amount":300},{"id":181,"name":"冯卫","amount":200},{"id":182,"name":"樊远华","amount":200},{"id":183,"name":"芬芬","amount":200},{"id":184,"name":"芳芳","amount":200},{"id":185,"name":"余庆玲","amount":200},{"id":186,"name":"李学文","amount":500},{"id":187,"name":"姜艳萍","amount":300},{"id":188,"name":"陈善龙","amount":1500},{"id":189,"name":"余佐太","amount":3000},{"id":190,"name":"王双燕","amount":200},{"id":191,"name":"王宗朋","amount":200},{"id":192,"name":"王孜淼","amount":3000},{"id":193,"name":"余佐国","amount":3000},{"id":194,"name":"王洪桥","amount":2000},{"id":195,"name":"黄仕轩","amount":300},{"id":196,"name":"刘衍朋","amount":200},{"id":197,"name":"胡风云","amount":200},{"id":198,"name":"胡炳忠","amount":200},{"id":199,"name":"田世翠","amount":300},{"id":200,"name":"田峰","amount":200},{"id":201,"name":"刘永朝","amount":200},{"id":202,"name":"王玉林","amount":500},{"id":203,"name":"杨允洲","amount":200},{"id":204,"name":"薛天美","amount":200},{"id":205,"name":"曾召清","amount":200},{"id":206,"name":"杨训","amount":200},{"id":207,"name":"郝永汉","amount":200},{"id":208,"name":"宋召军","amount":200},{"id":209,"name":"左茂富","amount":200},{"id":210,"name":"杨正辉","amount":200},{"id":211,"name":"李正军","amount":200},{"id":212,"name":"甘顺桃","amount":200},{"id":213,"name":"余佐位","amount":500},{"id":214,"name":"薛月忠","amount":100},{"id":215,"name":"薛月贵","amount":200},{"id":216,"name":"杨启平","amount":200},{"id":217,"name":"魏耀兴","amount":200},{"id":218,"name":"李开华","amount":1000},{"id":219,"name":"李时汉","amount":200},{"id":220,"name":"乔申福","amount":300},{"id":221,"name":"乔申友","amount":200},{"id":222,"name":"黄宏林","amount":500},{"id":223,"name":"李时权","amount":500},{"id":224,"name":"小玲","amount":200},{"id":225,"name":"刘静","amount":200},{"id":226,"name":"李兆祥","amount":200},{"id":227,"name":"廖明兴","amount":200},{"id":228,"name":"刘玉平","amount":200},{"id":229,"name":"谢舜禹","amount":200},{"id":230,"name":"黄庭利","amount":500},{"id":231,"name":"曾娜","amount":200},{"id":232,"name":"李海清","amount":200},{"id":233,"name":"曾宪勇","amount":200},{"id":234,"name":"龚荣芳","amount":200},{"id":235,"name":"刘绍荣","amount":200},{"id":236,"name":"宋召兵","amount":200},{"id":237,"name":"曾召安","amount":200},{"id":238,"name":"王远祝","amount":200},{"id":239,"name":"龙世福","amount":300},{"id":240,"name":"周自胜","amount":300},{"id":241,"name":"万浩","amount":200},{"id":242,"name":"袁卓荣","amount":500},{"id":243,"name":"杨朝昱","amount":200},{"id":244,"name":"李学浩","amount":200},{"id":245,"name":"彭杰","amount":500},{"id":246,"name":"余佐才","amount":500},{"id":247,"name":"彭耀琼","amount":300},{"id":248,"name":"何琼","amount":200},{"id":249,"name":"任泽琼","amount":200},{"id":250,"name":"陈辉洲","amount":200},{"id":251,"name":"曾召安","amount":200},{"id":252,"name":"贺红翠","amount":500},{"id":253,"name":"黄大灯","amount":200},{"id":254,"name":"龙军","amount":200},{"id":255,"name":"李松柏","amount":300},{"id":256,"name":"李开才","amount":200},{"id":257,"name":"雷科平","amount":200},{"id":258,"name":"曾祥军","amount":200},{"id":259,"name":"谢天鹏","amount":200},{"id":260,"name":"方永立","amount":200},{"id":261,"name":"杨正学","amount":200},{"id":262,"name":"向德全","amount":200},{"id":263,"name":"向大学","amount":200},{"id":264,"name":"唐依平","amount":300},{"id":265,"name":"彭洪","amount":200},{"id":266,"name":"龙德波","amount":200},{"id":267,"name":"向运康","amount":300},{"id":268,"name":"余云军","amount":200},{"id":269,"name":"赵远娇","amount":300},{"id":270,"name":"杨连武","amount":100},{"id":271,"name":"魏娅玲","amount":200},{"id":272,"name":"谭安艳","amount":200},{"id":273,"name":"黄桃圆","amount":1000},{"id":274,"name":"高兰","amount":200},{"id":275,"name":"高维","amount":500},{"id":276,"name":"郭再菊","amount":200},{"id":277,"name":"付光华","amount":200},{"id":278,"name":"龚建华","amount":200},{"id":279,"name":"向军","amount":300},{"id":280,"name":"薛月文","amount":200},{"id":281,"name":"游莫伟","amount":500},{"id":282,"name":"解维泰","amount":300},{"id":283,"name":"李开福","amount":200},{"id":284,"name":"文孝国","amount":400},{"id":285,"name":"尹健","amount":100},{"id":286,"name":"周传锐","amount":200},{"id":287,"name":"何竹林","amount":200},{"id":288,"name":"姚显全","amount":300},{"id":289,"name":"董俊楠","amount":500},{"id":290,"name":"董传荣","amount":200},{"id":291,"name":"李仲东","amount":200},{"id":292,"name":"冉茂莲","amount":300},{"id":293,"name":"樊一寿","amount":200},{"id":294,"name":"胡忠喜","amount":500},{"id":295,"name":"宋文元","amount":300},{"id":296,"name":"魏明玉","amount":500},{"id":297,"name":"万坤平","amount":500},{"id":298,"name":"张胜美","amount":300},{"id":299,"name":"周慈奎","amount":300},{"id":300,"name":"袁锋","amount":300},{"id":301,"name":"魏宗彬","amount":300},{"id":302,"name":"孙德仲","amount":1000},{"id":303,"name":"刘克芳","amount":1000},{"id":304,"name":"向运和","amount":500},{"id":305,"name":"魏耀明","amount":500},{"id":306,"name":"李世安","amount":200},{"id":307,"name":"陈小平","amount":300},{"id":308,"name":"刘明森","amount":300},{"id":309,"name":"胡亚军","amount":300},{"id":310,"name":"黄红德","amount":500},{"id":311,"name":"魏耀容","amount":200},{"id":312,"name":"易定勇","amount":200},{"id":313,"name":"熊发贵","amount":200},{"id":314,"name":"王超","amount":200},{"id":315,"name":"鲁良州","amount":200},{"id":316,"name":"张延树","amount":200},{"id":317,"name":"李明亮","amount":200},{"id":318,"name":"薛月明","amount":200},{"id":319,"name":"谭根吾","amount":500},{"id":320,"name":"肖光锋","amount":200},{"id":321,"name":"左茂文","amount":200},{"id":322,"name":"李丛明","amount":300},{"id":323,"name":"王羽","amount":300},{"id":324,"name":"余金花","amount":1000},{"id":325,"name":"余南平","amount":1000},{"id":326,"name":"朱宏进","amount":200},{"id":327,"name":"陈谊轩","amount":300},{"id":328,"name":"刘卜明","amount":200},{"id":329,"name":"聂自娥","amount":200},{"id":330,"name":"姜锦雪","amount":500},{"id":331,"name":"王兴明","amount":200},{"id":332,"name":"杨允朝","amount":500},{"id":333,"name":"杨尚锋","amount":200},{"id":334,"name":"魏明华","amount":500},{"id":335,"name":"王勇","amount":500},{"id":336,"name":"余晶平","amount":500},{"id":337,"name":"曾召品","amount":300},{"id":338,"name":"黄建华","amount":200},{"id":339,"name":"胡启翠","amount":300},{"id":340,"name":"杨光德","amount":200},{"id":341,"name":"鄢巨国","amount":200},{"id":342,"name":"黄文清","amount":200},{"id":343,"name":"冯大恒","amount":200},{"id":344,"name":"李垂国","amount":300},{"id":345,"name":"曾芳","amount":300},{"id":346,"name":"曾芳","amount":200},{"id":347,"name":"罗欢","amount":200},{"id":348,"name":"王同富","amount":200},{"id":349,"name":"谭发国","amount":300},{"id":350,"name":"李鹏","amount":200},{"id":351,"name":"曾钊坤","amount":200},{"id":352,"name":"杨敏","amount":200},{"id":353,"name":"李祖兵","amount":200},{"id":354,"name":"彭耀平","amount":200},{"id":355,"name":"秦文兰","amount":300},{"id":356,"name":"刘健","amount":200},{"id":357,"name":"斯国清","amount":200},{"id":358,"name":"游良平","amount":500},{"id":359,"name":"王启平","amount":200},{"id":360,"name":"王玉平","amount":200},{"id":361,"name":"左茂成","amount":200},{"id":362,"name":"左茂寿","amount":200},{"id":363,"name":"龚清新","amount":300},{"id":364,"name":"田虎成","amount":300},{"id":365,"name":"曾广庭","amount":200},{"id":366,"name":"李仁荣","amount":300},{"id":367,"name":"龚莉","amount":300},{"id":368,"name":"曾建","amount":200},{"id":369,"name":"廖开华","amount":500},{"id":370,"name":"胡词坤","amount":200},{"id":371,"name":"曾召俊","amount":300},{"id":372,"name":"余佐美","amount":300},{"id":373,"name":"易定才","amount":200},{"id":374,"name":"曹德平","amount":500},{"id":375,"name":"左词勇","amount":200},{"id":376,"name":"李宗章","amount":300},{"id":377,"name":"王昌兴","amount":300},{"id":378,"name":"李宗峰","amount":200},{"id":379,"name":"王同阶","amount":200},{"id":380,"name":"李永林","amount":500},{"id":381,"name":"杨允香","amount":300},{"id":382,"name":"姚建华","amount":300},{"id":383,"name":"朱宏伟","amount":300},{"id":384,"name":"王国太","amount":300},{"id":385,"name":"杨光成","amount":200},{"id":386,"name":"易发坤","amount":200},{"id":387,"name":"陈辉炎","amount":300},{"id":388,"name":"周红","amount":300},{"id":389,"name":"王勇","amount":1000},{"id":390,"name":"刘衍月","amount":500},{"id":391,"name":"刘普祥","amount":200},{"id":392,"name":"黄前辉","amount":200},{"id":393,"name":"葛师军","amount":500},{"id":394,"name":"易定波","amount":200},{"id":395,"name":"易定碧","amount":300},{"id":396,"name":"吴定菊","amount":300},{"id":397,"name":"杨义全","amount":500},{"id":398,"name":"李庚","amount":200},{"id":399,"name":"向运喜","amount":500},{"id":400,"name":"杨允华","amount":500},{"id":401,"name":"吴艳平","amount":500}]</script>
+  <script>
+    (function () {
+      'use strict';
+      var records = JSON.parse(document.getElementById('records-data').textContent);
+      function normalize(value) { return String(value == null ? '' : value).replace(/\s+/g, ''); }
+      function sortKey(name) {
+        return normalize(name).replace(/^曾/, '增').replace(/^解/, '谢');
+      }
+      var collator = new Intl.Collator('zh-Hans-CN-u-co-pinyin');
+      var ordered = [];
+      var duplicateTotals = {};
+      var duplicateOrdinals = {};
+      for (var s = 0; s < records.length; s += 1) {
+        var duplicateKey = '$' + normalize(records[s].name);
+        duplicateTotals[duplicateKey] = (duplicateTotals[duplicateKey] || 0) + 1;
+        duplicateOrdinals['$' + records[s].id] = duplicateTotals[duplicateKey];
+        ordered.push({ record: records[s], key: sortKey(records[s].name), position: s });
+      }
+      ordered.sort(function (a, b) { return collator.compare(a.key, b.key) || a.position - b.position; });
+      function selectRecords(query) {
+        var needle = normalize(query);
+        var selected = [];
+        for (var n = 0; n < ordered.length; n += 1) {
+          if (normalize(ordered[n].record.name).indexOf(needle) !== -1) { selected.push(ordered[n].record); }
+        }
+        return selected;
+      }
+      window.GiftApp = { selectRecords: selectRecords };
+      var total = 0;
+      for (var t = 0; t < records.length; t += 1) { total += records[t].amount; }
+      document.getElementById('total-count').textContent = String(records.length);
+      document.getElementById('total-amount').textContent = String(total);
+      var target = document.getElementById('results');
+      var input = document.getElementById('search-input');
+      function render() {
+        var displayed = selectRecords(input.value);
+        target.textContent = '';
+        document.getElementById('results-count').textContent = normalize(input.value) ? '找到 ' + displayed.length + ' 笔' : '全部记录 · ' + displayed.length + ' 笔';
+        if (!displayed.length) {
+          var emptyRow = document.createElement('tr');
+          var emptyCell = document.createElement('td');
+          emptyCell.colSpan = 2;
+          var emptyTitle = document.createElement('strong');
+          emptyTitle.className = 'empty-title';
+          emptyTitle.textContent = '没有找到这个姓名';
+          var emptyHelp = document.createElement('span');
+          emptyHelp.className = 'empty-help';
+          emptyHelp.textContent = '试试只输入姓名中的一个字，或点「清空」查看全部。';
+          emptyCell.appendChild(emptyTitle);
+          emptyCell.appendChild(emptyHelp);
+          emptyRow.appendChild(emptyCell);
+          target.appendChild(emptyRow);
+        }
+        for (var i = 0; i < displayed.length; i += 1) {
+          var row = document.createElement('tr');
+          row.setAttribute('data-record-id', String(displayed[i].id));
+          var nameCell = document.createElement('td');
+          var name = document.createElement('span');
+          name.className = 'record-name';
+          name.textContent = displayed[i].name;
+          nameCell.appendChild(name);
+          if (duplicateTotals['$' + normalize(displayed[i].name)] > 1) {
+            var duplicate = document.createElement('span');
+            duplicate.className = 'duplicate-label';
+            duplicate.textContent = '同名 · 第' + duplicateOrdinals['$' + displayed[i].id] + '笔';
+            nameCell.appendChild(duplicate);
+          }
+          var amountCell = document.createElement('td');
+          var amount = document.createElement('span');
+          amount.className = 'record-amount';
+          amount.textContent = String(displayed[i].amount) + ' 元';
+          amountCell.appendChild(amount);
+          row.appendChild(nameCell);
+          row.appendChild(amountCell);
+          target.appendChild(row);
+        }
+      }
+      input.addEventListener('input', render);
+      document.getElementById('search-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        render();
+      });
+      document.getElementById('clear-button').addEventListener('click', function () {
+        input.value = '';
+        render();
+      });
+      render();
+    }());
+  </script>
+</body>
+</html>
